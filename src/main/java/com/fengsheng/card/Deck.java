@@ -214,7 +214,9 @@ public class Deck {
             new WuDao(97, colors(Common.color.Black), Common.direction.Left, false),
             new WuDao(98, colors(Common.color.Black), Common.direction.Right, false),
             new WuDao(99, colors(Common.color.Blue, Common.color.Black), Common.direction.Left, false),
-            new WuDao(100, colors(Common.color.Red, Common.color.Black), Common.direction.Right, false)
+            new WuDao(100, colors(Common.color.Red, Common.color.Black), Common.direction.Right, false),
+            new FengYunBianHuan(101, colors(Common.color.Black), Common.direction.Up, false),
+            new FengYunBianHuan(102, colors(Common.color.Black), Common.direction.Up, false)
     );
 
     private static Common.color[] colors(Common.color... colors) {

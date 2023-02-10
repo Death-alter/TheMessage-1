@@ -46,6 +46,7 @@ public class addcard implements Function<Map<String, String>, String> {
                                 case Jie_Huo -> new JieHuo(g.getDeck().getNextId(), c);
                                 case Diao_Bao -> new DiaoBao(g.getDeck().getNextId(), c);
                                 case Wu_Dao -> new WuDao(g.getDeck().getNextId(), c);
+                                case Feng_Yun_Bian_Huan -> new FengYunBianHuan(g.getDeck().getNextId(), c);
                                 default -> throw new IllegalStateException("Unexpected value: " + cardType);
                             });
                         }

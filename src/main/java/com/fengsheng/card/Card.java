@@ -146,6 +146,7 @@ public abstract class Card {
             case Jie_Huo -> new JieHuo(originCard);
             case Diao_Bao -> new DiaoBao(originCard);
             case Wu_Dao -> new WuDao(originCard);
+            case Feng_Yun_Bian_Huan -> new FengYunBianHuan(originCard);
             default -> throw new IllegalStateException("Unexpected value: " + falseType);
         };
     }
