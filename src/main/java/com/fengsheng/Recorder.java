@@ -1,6 +1,6 @@
 package com.fengsheng;
 
-import com.fengsheng.network.ProtoServerChannelHandler;
+import com.fengsheng.network.WebSocketServerChannelHandler;
 import com.fengsheng.phase.StartGame;
 import com.fengsheng.phase.WaitForSelectRole;
 import com.fengsheng.protos.Errcode;
@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Recorder {
     private static final Logger log = Logger.getLogger(Recorder.class);
-    private static final short firstProtoId = ProtoServerChannelHandler.stringHash("wait_for_select_role_toc");
+    private static final short firstProtoId = WebSocketServerChannelHandler.stringHash("wait_for_select_role_toc");
     private static final ExecutorService saveLoadPool = Executors.newSingleThreadExecutor();
 
     private List<Record.recorder_line> list = new ArrayList<>();

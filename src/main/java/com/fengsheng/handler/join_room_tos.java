@@ -1,7 +1,7 @@
 package com.fengsheng.handler;
 
 import com.fengsheng.*;
-import com.fengsheng.network.ProtoServerChannelHandler;
+import com.fengsheng.network.WebSocketServerChannelHandler;
 import com.fengsheng.protos.Errcode;
 import com.fengsheng.protos.Fengsheng;
 import com.google.protobuf.GeneratedMessageV3;
@@ -38,7 +38,7 @@ public class join_room_tos implements ProtoHandler {
             }
             CountDownLatch cd = new CountDownLatch(1);
             GameExecutor.post(oldPlayer.getGame(), () -> {
-                ProtoServerChannelHandler.exchangePlayer(oldPlayer, player);
+                WebSocketServerChannelHandler.exchangePlayer(oldPlayer, player);
                 cd.countDown();
                 oldPlayer.setAutoPlay(false);
                 oldPlayer.reconnect();

@@ -8,6 +8,7 @@ import java.util.Properties;
 
 public final class Config {
     public static final int ListenPort;
+    public static final int ListenWebSocketPort;
     public static final int TotalPlayerCount;
     public static final int HandCardCountBegin;
     public static final int HandCardCountEachTurn;
@@ -27,6 +28,7 @@ public final class Config {
             throw new RuntimeException(e);
         }
         pps.putIfAbsent("listen_port", "9091");
+        pps.putIfAbsent("listen_websocket_port", "12222");
         pps.putIfAbsent("player.total_count", "5");
         pps.putIfAbsent("rule.hand_card_count_begin", "3");
         pps.putIfAbsent("rule.hand_card_count_each_turn", "3");
@@ -37,6 +39,7 @@ public final class Config {
         pps.putIfAbsent("gm.debug_roles", "22,26");
         pps.putIfAbsent("record_list_size", "20");
         ListenPort = Integer.parseInt(pps.getProperty("listen_port"));
+        ListenWebSocketPort = Integer.parseInt(pps.getProperty("listen_websocket_port"));
         TotalPlayerCount = Integer.parseInt(pps.getProperty("player.total_count"));
         HandCardCountBegin = Integer.parseInt(pps.getProperty("rule.hand_card_count_begin"));
         HandCardCountEachTurn = Integer.parseInt(pps.getProperty("rule.hand_card_count_each_turn"));

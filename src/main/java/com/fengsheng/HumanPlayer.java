@@ -1,7 +1,7 @@
 package com.fengsheng;
 
 import com.fengsheng.card.Card;
-import com.fengsheng.network.ProtoServerChannelHandler;
+import com.fengsheng.network.WebSocketServerChannelHandler;
 import com.fengsheng.phase.*;
 import com.fengsheng.protos.Common;
 import com.fengsheng.protos.Fengsheng;
@@ -49,7 +49,7 @@ public class HumanPlayer extends AbstractPlayer {
     public void send(GeneratedMessageV3 message) {
         byte[] buf = message.toByteArray();
         final String name = message.getDescriptorForType().getName();
-        short id = ProtoServerChannelHandler.stringHash(name);
+        short id = WebSocketServerChannelHandler.stringHash(name);
         recorder.add(id, buf);
         if (isActive()) send(id, buf, true);
         log.debug("send@%s len: %d %s | %s".formatted(channel.id().asShortText(), buf.length, name,
@@ -57,8 +57,7 @@ public class HumanPlayer extends AbstractPlayer {
     }
 
     public void send(short id, byte[] buf, boolean flush) {
-        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.ioBuffer(buf.length + 4, buf.length + 4);
-        byteBuf.writeShortLE(buf.length + 2);
+        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.ioBuffer(buf.length + 2, buf.length + 2);
         byteBuf.writeShortLE(id);
         byteBuf.writeBytes(buf);
         var f = flush ? channel.writeAndFlush(byteBuf) : channel.write(byteBuf);
@@ -133,7 +132,7 @@ public class HumanPlayer extends AbstractPlayer {
                 timeout = GameExecutor.TimeWheel.newTimeout(timeout.task(), delay, TimeUnit.SECONDS);
             }
         }
-        send(ProtoServerChannelHandler.stringHash("auto_play_toc"), Fengsheng.auto_play_toc.newBuilder().setEnable(autoPlay).build().toByteArray(), true);
+        send(WebSocketServerChannelHandler.stringHash("auto_play_toc"), Fengsheng.auto_play_toc.newBuilder().setEnable(autoPlay).build().toByteArray(), true);
     }
 
     @Override

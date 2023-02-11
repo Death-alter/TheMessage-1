@@ -11,11 +11,12 @@ import java.util.concurrent.CountDownLatch;
 
 public final class Network {
     private Network() {
-        
+
     }
 
     public static void init() {
         new Thread(Network::initGameNetwork).start();
+        new Thread(Network::initGameWebSocketNetwork).start();
         new Thread(Network::initGmNetwork).start();
         try {
             cd.await();
@@ -25,7 +26,7 @@ public final class Network {
         }
     }
 
-    private static final CountDownLatch cd = new CountDownLatch(2);
+    private static final CountDownLatch cd = new CountDownLatch(3);
 
     private static void initGameNetwork() {
         EventLoopGroup bossGroup = new NioEventLoopGroup();
@@ -38,6 +39,28 @@ public final class Network {
                     .childHandler(new ProtoServerInitializer());
 
             ChannelFuture future = bootstrap.bind(Config.ListenPort);
+            cd.countDown();
+            future.channel().closeFuture().sync();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        } finally {
+            bossGroup.shutdownGracefully();
+            workerGroup.shutdownGracefully();
+        }
+    }
+
+    private static void initGameWebSocketNetwork() {
+        EventLoopGroup bossGroup = new NioEventLoopGroup();
+        EventLoopGroup workerGroup = new NioEventLoopGroup();
+        try {
+            ServerBootstrap bootstrap = new ServerBootstrap();
+
+            bootstrap.group(bossGroup, workerGroup)
+                    .channel(NioServerSocketChannel.class)
+                    .childHandler(new WebSocketServerInitializer());
+
+            ChannelFuture future = bootstrap.bind(Config.ListenWebSocketPort);
             cd.countDown();
             future.channel().closeFuture().sync();
         } catch (InterruptedException e) {
