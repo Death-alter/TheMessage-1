@@ -1,7 +1,6 @@
 package com.fengsheng;
 
 import com.fengsheng.card.Card;
-import com.fengsheng.network.WebSocketServerChannelHandler;
 import com.fengsheng.phase.*;
 import com.fengsheng.protos.Common;
 import com.fengsheng.protos.Fengsheng;
@@ -49,21 +48,22 @@ public class HumanPlayer extends AbstractPlayer {
     public void send(GeneratedMessageV3 message) {
         byte[] buf = message.toByteArray();
         final String name = message.getDescriptorForType().getName();
-        short id = WebSocketServerChannelHandler.stringHash(name);
-        recorder.add(id, buf);
-        if (isActive()) send(id, buf, true);
+        recorder.add(name, buf);
+        if (isActive()) send(name, buf, true);
         log.debug("send@%s len: %d %s | %s".formatted(channel.id().asShortText(), buf.length, name,
                 printer.printToString(message).replaceAll("\n *", " ")));
     }
 
-    public void send(short id, byte[] buf, boolean flush) {
+    public void send(String protoName, byte[] buf, boolean flush) {
         ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.ioBuffer(buf.length + 2, buf.length + 2);
-        byteBuf.writeShortLE(id);
+        byte[] protoNameBuf = protoName.getBytes();
+        byteBuf.writeShortLE(protoNameBuf.length);
+        byteBuf.writeBytes(protoNameBuf);
         byteBuf.writeBytes(buf);
         var f = flush ? channel.writeAndFlush(byteBuf) : channel.write(byteBuf);
         f.addListener((ChannelFutureListener) future -> {
             if (!future.isSuccess())
-                log.error("send@%s failed, id: %d, len: %d".formatted(channel.id().asShortText(), id, buf.length));
+                log.error("send@%s failed, proto name: %s, len: %d".formatted(channel.id().asShortText(), protoName, buf.length));
         });
     }
 
@@ -132,7 +132,7 @@ public class HumanPlayer extends AbstractPlayer {
                 timeout = GameExecutor.TimeWheel.newTimeout(timeout.task(), delay, TimeUnit.SECONDS);
             }
         }
-        send(WebSocketServerChannelHandler.stringHash("auto_play_toc"), Fengsheng.auto_play_toc.newBuilder().setEnable(autoPlay).build().toByteArray(), true);
+        send("auto_play_toc", Fengsheng.auto_play_toc.newBuilder().setEnable(autoPlay).build().toByteArray(), true);
     }
 
     @Override

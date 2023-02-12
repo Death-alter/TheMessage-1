@@ -1,6 +1,5 @@
 package com.fengsheng;
 
-import com.fengsheng.network.WebSocketServerChannelHandler;
 import com.fengsheng.phase.StartGame;
 import com.fengsheng.phase.WaitForSelectRole;
 import com.fengsheng.protos.Errcode;
@@ -22,7 +21,6 @@ import java.util.concurrent.TimeUnit;
 
 public class Recorder {
     private static final Logger log = Logger.getLogger(Recorder.class);
-    private static final short firstProtoId = WebSocketServerChannelHandler.stringHash("wait_for_select_role_toc");
     private static final ExecutorService saveLoadPool = Executors.newSingleThreadExecutor();
 
     private List<Record.recorder_line> list = new ArrayList<>();
@@ -33,9 +31,9 @@ public class Recorder {
 
     private volatile boolean pausing = false;
 
-    public void add(short messageId, byte[] messageBuf) {
-        if (!loading && (messageId == firstProtoId || !list.isEmpty()))
-            list.add(Record.recorder_line.newBuilder().setNanoTime(System.nanoTime()).setMessageId(messageId)
+    public void add(String protoName, byte[] messageBuf) {
+        if (!loading && (!"wait_for_select_role_toc".equals(protoName) || !list.isEmpty()))
+            list.add(Record.recorder_line.newBuilder().setNanoTime(System.nanoTime()).setProtoName(protoName)
                     .setMessageBuf(ByteString.copyFrom(messageBuf)).build());
     }
 
@@ -129,7 +127,7 @@ public class Recorder {
                 break;
             }
             Record.recorder_line line = list.get(currentIndex);
-            player.send((short) line.getMessageId(), line.getMessageBuf().toByteArray(), true);
+            player.send(line.getProtoName(), line.getMessageBuf().toByteArray(), true);
             if (++currentIndex >= list.size()) {
                 player.send(Fengsheng.display_record_end_toc.getDefaultInstance());
                 list = new ArrayList<>();
@@ -147,7 +145,7 @@ public class Recorder {
     public void reconnect(HumanPlayer player) {
         for (int i = 0; i < list.size(); i++) {
             var line = list.get(i);
-            player.send((short) line.getMessageId(), line.getMessageBuf().toByteArray(), i == list.size() - 1);
+            player.send(line.getProtoName(), line.getMessageBuf().toByteArray(), i == list.size() - 1);
         }
     }
 

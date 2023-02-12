@@ -31,13 +31,9 @@ public class WebSocketServerChannelHandler extends SimpleChannelInboundHandler<W
 
     private static final TextFormat.Printer printer = TextFormat.printer().escapingNonAscii(false);
 
-    private static final Map<Short, ProtoInfo> ProtoInfoMap = new HashMap<>();
+    private static final Map<String, ProtoInfo> ProtoInfoMap = new HashMap<>();
 
     private static final ConcurrentMap<String, HumanPlayer> playerCache = new ConcurrentHashMap<>();
-
-    private static final short heartMsgId = stringHash("heart_tos");
-
-    private static final short autoPlayMsgId = stringHash("auto_play_tos");
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, WebSocketFrame webSocketFrame) throws Exception {
@@ -47,19 +43,26 @@ public class WebSocketServerChannelHandler extends SimpleChannelInboundHandler<W
             throw new UnsupportedOperationException(webSocketFrame.getClass().getName() + " frame types not supported");
         }
         ByteBuf msg = frame.content();
-        int msgLen = msg.readableBytes();
-        short id = msg.readShortLE();
-        var protoInfo = ProtoInfoMap.get(id);
-        if (protoInfo == null) {
-            log.error("incorrect msg id: " + id);
+        short protoNameLen = msg.readShortLE();
+        if (msg.readableBytes() < protoNameLen) {
+            log.error("incorrect proto name length: " + protoNameLen);
             ctx.close();
             return;
         }
-        byte[] buf = new byte[msgLen - 2];
+        byte[] protoNameBuf = new byte[protoNameLen];
+        msg.readBytes(protoNameBuf);
+        String protoName = new String(protoNameBuf);
+        var protoInfo = ProtoInfoMap.get(protoName);
+        if (protoInfo == null) {
+            log.error("incorrect msg, proto name: " + protoName);
+            ctx.close();
+            return;
+        }
+        byte[] buf = new byte[msg.readableBytes()];
         msg.readBytes(buf);
         var message = (GeneratedMessageV3) protoInfo.parser().parseFrom(buf);
-        if (id != heartMsgId && id != autoPlayMsgId) {
-            log.debug("recv@%s len: %d %s | %s".formatted(ctx.channel().id().asShortText(), msgLen - 2, protoInfo.name(),
+        if (!"heart_tos".equals(protoName) && !"auto_play_tos".equals(protoName)) {
+            log.debug("recv@%s len: %d %s | %s".formatted(ctx.channel().id().asShortText(), buf.length, protoName,
                     printer.printToString(message).replaceAll("\n *", " ")));
         }
         HumanPlayer player = playerCache.get(ctx.channel().id().asLongText());
@@ -152,7 +155,7 @@ public class WebSocketServerChannelHandler extends SimpleChannelInboundHandler<W
                 handler = (ProtoHandler) handlerClass.getDeclaredConstructor().newInstance();
             } catch (ClassNotFoundException ignored) {
             }
-            if (ProtoInfoMap.putIfAbsent(id, new ProtoInfo(name, parser, handler)) != null) {
+            if (ProtoInfoMap.putIfAbsent(name, new ProtoInfo(name, parser, handler)) != null) {
                 throw new RuntimeException("Duplicate message meta register by id: " + id);
             }
         }
