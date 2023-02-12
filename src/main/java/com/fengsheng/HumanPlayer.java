@@ -55,8 +55,9 @@ public class HumanPlayer extends AbstractPlayer {
     }
 
     public void send(String protoName, byte[] buf, boolean flush) {
-        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.ioBuffer(buf.length + 2, buf.length + 2);
         byte[] protoNameBuf = protoName.getBytes();
+        int totalLen = 2 + protoNameBuf.length + buf.length;
+        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.ioBuffer(totalLen, totalLen);
         byteBuf.writeShortLE(protoNameBuf.length);
         byteBuf.writeBytes(protoNameBuf);
         byteBuf.writeBytes(buf);
