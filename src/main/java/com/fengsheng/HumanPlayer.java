@@ -7,9 +7,10 @@ import com.fengsheng.protos.Fengsheng;
 import com.google.protobuf.GeneratedMessageV3;
 import com.google.protobuf.TextFormat;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
+import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import io.netty.util.Timeout;
 import org.apache.log4j.Logger;
 
@@ -57,11 +58,12 @@ public class HumanPlayer extends AbstractPlayer {
     public void send(String protoName, byte[] buf, boolean flush) {
         byte[] protoNameBuf = protoName.getBytes();
         int totalLen = 2 + protoNameBuf.length + buf.length;
-        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.ioBuffer(totalLen, totalLen);
+        ByteBuf byteBuf = Unpooled.buffer(totalLen);
         byteBuf.writeShortLE(protoNameBuf.length);
         byteBuf.writeBytes(protoNameBuf);
         byteBuf.writeBytes(buf);
-        var f = flush ? channel.writeAndFlush(byteBuf) : channel.write(byteBuf);
+        BinaryWebSocketFrame frame = new BinaryWebSocketFrame(byteBuf);
+        var f = flush ? channel.writeAndFlush(frame) : channel.write(frame);
         f.addListener((ChannelFutureListener) future -> {
             if (!future.isSuccess())
                 log.error("send@%s failed, proto name: %s, len: %d".formatted(channel.id().asShortText(), protoName, buf.length));
